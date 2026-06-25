@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b1dfecb9c7d432ea99a1a23489bc82d, type: 3}
+  m_Name: MainMenu
+  m_EditorClassIdentifier: Assembly-CSharp::WindowData
+  allowMultipleInstances: 0
+  title: Main Menu
+  hideTitleBar: 0
+  width: 400
+  minWidth: 400
+  maxWidth: 400
+  height: 550
+  minHeight: 550
+  maxHeight: 550
+  backgroundColor: {r: 0.40527758, g: 0.36779103, b: 0.8207547, a: 1}
+  titleBarColor: {r: 0.2239336, g: 0.11372547, b: 0.6901961, a: 1}
+  titleTextColor: {r: 1, g: 1, b: 1, a: 1}
+  components: {fileID: 2952181204188144695, guid: 5894831b0c7afa64dad404f188f5e57b, type: 3}
