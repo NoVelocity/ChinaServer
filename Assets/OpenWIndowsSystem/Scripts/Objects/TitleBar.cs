@@ -1,13 +1,14 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class TitleBar : MonoBehaviour
 {
     public Window Window { get; set; }
 
-    private void OnMouseDrag()
+    public void OnDrag(BaseEventData eventData)
     {
-        print(Mouse.current.position.x + " " + Mouse.current.position.y);
+        Window.GetComponent<RectTransform>().anchoredPosition += ((PointerEventData)eventData).delta;
     }
 }

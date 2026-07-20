@@ -30,11 +30,19 @@ public class Window : MonoBehaviour
     {
         _thisWindow = gameObject;
         _closeButtonController = closeButton.GetComponent<Button>();
+
+        titleBar.Window = this;
     }
 
-    public void Build(Vector2 canvasSize, bool isPlayerInput)
+    public void Build(Vector2 canvasSize, bool isPlayerInput, bool showOnCentre = true)
     {
-        CalculatePosition(canvasSize, new Vector2(canvasSize.x / 2f, canvasSize.y / 2f));
+        RectTransform rect = _thisWindow.GetComponent<RectTransform>();
+
+        float marginLeftRight = (canvasSize.x - windowData.width) / (showOnCentre ? 2f : 1f),
+            marginTopBottom = (canvasSize.y - windowData.height) / (showOnCentre ? 2f : 1f);
+
+        rect.offsetMin = new Vector2(showOnCentre ? marginLeftRight : 0, marginTopBottom);
+        rect.offsetMax = new Vector2(-marginLeftRight, showOnCentre ? -marginTopBottom : 0);
 
         titleBar.gameObject.SetActive(!windowData.hideTitleBar);
         titleBar.GetComponent<Image>().color = windowData.titleBarColor;
@@ -49,20 +57,8 @@ public class Window : MonoBehaviour
         _componentsController = Instantiate(windowData.components.gameObject, _thisWindow.transform)
             .GetComponent<WindowComponentsController>();
         _componentsController.Init(this);
-        
+
         _componentsController.OnOpen(isPlayerInput);
-    }
-
-    public void CalculatePosition(Vector2 canvasSize, Vector2 newPosition)
-    {
-        RectTransform rect = _thisWindow.GetComponent<RectTransform>();
-
-        float marginLeftRight = (canvasSize.x - windowData.width),
-            marginTopBottom = (canvasSize.y - windowData.height);
-
-        rect.offsetMin = new Vector2(0, marginTopBottom);
-        rect.offsetMax = new Vector2(-marginLeftRight, 0);
-        print(rect.position);
     }
 
     public void Close(bool isPlayerInput, bool forceClose = false)
