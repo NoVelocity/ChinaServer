@@ -36,6 +36,8 @@ public class Window : MonoBehaviour
 
     public void Build(Vector2 canvasSize, bool isPlayerInput, bool showOnCentre = true)
     {
+        #region Position
+
         RectTransform rect = _thisWindow.GetComponent<RectTransform>();
 
         float marginLeftRight = (canvasSize.x - windowData.width) / (showOnCentre ? 2f : 1f),
@@ -43,6 +45,8 @@ public class Window : MonoBehaviour
 
         rect.offsetMin = new Vector2(showOnCentre ? marginLeftRight : 0, marginTopBottom);
         rect.offsetMax = new Vector2(-marginLeftRight, showOnCentre ? -marginTopBottom : 0);
+
+        #endregion
 
         titleBar.gameObject.SetActive(!windowData.hideTitleBar);
         titleBar.GetComponent<Image>().color = windowData.titleBarColor;
@@ -64,7 +68,7 @@ public class Window : MonoBehaviour
     public void Close(bool isPlayerInput, bool forceClose = false)
     {
         bool isCanceled = !_componentsController.OnClose(isPlayerInput);
-        if (!isCanceled)
+        if (!isCanceled || forceClose)
         {
             Destroy(_thisWindow);
         }
