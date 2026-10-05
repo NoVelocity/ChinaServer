@@ -1,9 +1,7 @@
 using NativeWebSocket;
 using System;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
-using static UnityEngine.GraphicsBuffer;
 
 public class WebSocketMessageEventArgs : EventArgs
 {
