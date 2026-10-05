@@ -612,7 +612,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &467358833
 Transform:
   m_ObjectHideFlags: 0
@@ -1211,13 +1211,15 @@ GameObject:
   - component: {fileID: 751037847}
   - component: {fileID: 751037846}
   - component: {fileID: 751037845}
+  - component: {fileID: 751037850}
+  - component: {fileID: 751037851}
   m_Layer: 3
   m_Name: Robot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &751037844
 Transform:
   m_ObjectHideFlags: 0
@@ -1343,6 +1345,35 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 751037843}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &751037850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751037843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f4b85b439d4454dabf9eca1edd2652, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NavMeshToCommand
+--- !u!114 &751037851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751037843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48f4c17dcec2f09438668e07cd22f5c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WebsocketClient
+  OnMessageReceived:
+    m_PersistentCalls:
+      m_Calls: []
+  _url: wss://echo.websocket.org
+  _connectOnStart: 1
 --- !u!1001 &754358866
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1565,7 +1596,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: b83507a091065dcf7b00ebc7aa85f596, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 3d53ee6f89b467a4aaf419183daa98f1, type: 2}
   m_BuildHeightMesh: 0
 --- !u!114 &1051525312
 MonoBehaviour:
