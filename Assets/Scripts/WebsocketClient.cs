@@ -1,4 +1,5 @@
 using NativeWebSocket;
+using Newtonsoft.Json.Linq;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
@@ -62,10 +63,28 @@ public class WebsocketClient : MonoBehaviour
 
         _websocket.OnMessage += (bytes) =>
         {
-            string rawMessage = System.Text.Encoding.UTF8.GetString(bytes); //гиперспецифичная функция шарпов наконец то применена, можно и на покой
-            print(rawMessage);
+            try
+            {
+                string rawMessage = System.Text.Encoding.UTF8.GetString(bytes);
+                JObject inboundJson = JObject.Parse(rawMessage);
 
-            OnMessageReceived.Invoke(new WebSocketMessageEventArgs(_url, rawMessage)); //не совсем понял для чего тебе source, поменяй _url на что то нужное если это не то
+                string sourceStr = inboundJson["source"]?.ToString() ?? "Unknown-source";
+                string payloadStr = inboundJson["payload"]?.ToString(Newtonsoft.Json.Formatting.None) ?? "Cant-parse-payload";
+
+                print(sourceStr);
+                print(payloadStr);
+
+                OnMessageReceived.Invoke(new WebSocketMessageEventArgs(sourceStr, payloadStr));
+
+                if (sourceStr != "Unknown-source")
+                {
+                    SendMessage(sourceStr, "\"ok\"");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error processing message: {ex.Message}");
+            }
         };
 
         await _websocket.Connect();
@@ -75,7 +94,19 @@ public class WebsocketClient : MonoBehaviour
     {
         if (_websocket != null && _websocket.State == WebSocketState.Open)
         {
-            string messageToSend = $"{{\"destination\": {destination}, \"payload\": {payload}}}";
+            JObject outboundJson = new JObject();
+            outboundJson["destination"] = destination;
+
+            try //if this fails
+            {
+                outboundJson["payload"] = JToken.Parse(payload);
+            }
+            catch //do this instead
+            {
+                outboundJson["payload"] = payload;
+            }
+
+            string messageToSend = outboundJson.ToString(Newtonsoft.Json.Formatting.None);
 
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(messageToSend);
             await _websocket.Send(bytes);

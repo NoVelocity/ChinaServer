@@ -1,11 +1,11 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
 [RequireComponent(typeof(RobotMover))]
-[RequireComponent(typeof(WebsocketClient))]
 public class NavMeshToCommand : MonoBehaviour
 {
     RobotMover _robotMover;
@@ -25,7 +25,7 @@ public class NavMeshToCommand : MonoBehaviour
     void Awake()
     {
         _robotMover = GetComponent<RobotMover>();
-        _client = WebsocketClient.Instance;
+        StartCoroutine(TryAssignClientRoutine());
     }
 
     void Update()
@@ -116,6 +116,19 @@ public class NavMeshToCommand : MonoBehaviour
             case CommandToSend.Backward: SendMove(rightBackward: true, leftBackward: true); break;
             case CommandToSend.RotateLeft: SendMove(rightBackward: true, leftBackward: false); break;
             case CommandToSend.RotateRight: SendMove(rightBackward: false, leftBackward: true); break;
+        }
+    }
+
+    IEnumerator TryAssignClientRoutine()
+    {
+        while (_client == null)
+        {
+            _client = WebsocketClient.Instance;
+
+            if (_client == null)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
         }
     }
 }
