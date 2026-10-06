@@ -1,21 +1,23 @@
-using System;
 using UnityEngine;
 
-public class WallRender : MonoBehaviour
+namespace SurfaceGen
 {
-    public Color wallColor;
-    private Renderer[] _renderers;
-
-    private void Awake()
+    public class WallRender : MonoBehaviour
     {
-        _renderers = GetComponentsInChildren<Renderer>();
-    }
+        public Color wallColor;
+        private Renderer[] _renderers;
 
-    void Update()
-    {
-        foreach (var render in _renderers)
+        private void Awake()
         {
-            render.material.color = wallColor;
+            _renderers = GetComponentsInChildren<Renderer>();
+        }
+
+        void Update()
+        {
+            foreach (var render in _renderers)
+            {
+                render.material.color = wallColor;
+            }
         }
     }
 }
