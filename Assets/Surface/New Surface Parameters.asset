@@ -13,6 +13,10 @@ MonoBehaviour:
   m_Name: New Surface Parameters
   m_EditorClassIdentifier: Assembly-CSharp::SurfaceParameters
   scale: {x: 10, y: 3, z: 10}
-  wallScale: 0.5
   wallParameters:
   - {fileID: 11400000, guid: 376e33129894618e9b31b0bf6354f990, type: 2}
+  robotParameters:
+  - {fileID: 11400000, guid: e3263a3e4a0124b61b22d8a096ec798e, type: 2}
+  roomParameters:
+  - {fileID: 0}
+  - {fileID: 0}

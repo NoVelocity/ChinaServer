@@ -167,7 +167,7 @@ MonoBehaviour:
   surfaceColor: {r: 0.6509434, g: 0.2377213, b: 0, a: 1}
   outerWallsColor: {r: 0.6415094, g: 0.5787922, b: 0, a: 1}
   innerWallsColor: {r: 0.15993294, g: 0.9056604, b: 0.15806337, a: 1}
-  parameters: {fileID: 11400000, guid: 3db2a9ca5f54b6c6184b077c21f2550c, type: 2}
+  localParameters: {fileID: 11400000, guid: 3db2a9ca5f54b6c6184b077c21f2550c, type: 2}
   wallPrefab: {fileID: 2018413821641445470, guid: f734c71635e7bf14cb74b88b7ed1e393, type: 3}
 --- !u!114 &936688938
 MonoBehaviour:

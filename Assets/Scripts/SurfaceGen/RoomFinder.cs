@@ -5,16 +5,18 @@ namespace SurfaceGen
 {
     public class RoomFinder : MonoBehaviour
     {
-        public Renderer floor; 
-        public float cellSize = 0.5f; 
-        public LayerMask wallMask = ~0;
-        public float checkHeight = 1f; 
+        public Renderer floor;
+        public float cellSize = 0.5f;
+        public float checkHeight = 1f;
         public Transform wallsRoot;
 
         public class Room
         {
             public List<Vector2Int> cells = new();
+            public Bounds bounds;
             public Vector3 center;
+            public float width;
+            public float depth;
             public float area;
         }
 
@@ -25,13 +27,11 @@ namespace SurfaceGen
         {
             rooms.Clear();
 
-
             Bounds b = floor.bounds;
             int w = Mathf.CeilToInt(b.size.x / cellSize);
             int h = Mathf.CeilToInt(b.size.z / cellSize);
 
             bool[,] blocked = new bool[w, h];
-            Vector3 half = new Vector3(cellSize, 0.1f, cellSize) * 0.45f;
 
             var walls = new List<Renderer>();
             foreach (var r in wallsRoot.GetComponentsInChildren<Renderer>())
@@ -58,12 +58,6 @@ namespace SurfaceGen
                 }
             }
 
-            int cnt = 0;
-            foreach (var v in blocked)
-                if (v)
-                    cnt++;
-            Debug.Log($"Cells: {cnt} из {w * h}");
-
             bool[,] visited = new bool[w, h];
             Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
@@ -77,10 +71,17 @@ namespace SurfaceGen
                 queue.Enqueue(new Vector2Int(x, z));
                 visited[x, z] = true;
 
+                int minX = x, maxX = x, minZ = z, maxZ = z;
+
                 while (queue.Count > 0)
                 {
                     var c = queue.Dequeue();
                     room.cells.Add(c);
+
+                    minX = Mathf.Min(minX, c.x);
+                    maxX = Mathf.Max(maxX, c.x);
+                    minZ = Mathf.Min(minZ, c.y);
+                    maxZ = Mathf.Max(maxZ, c.y);
 
                     foreach (var d in dirs)
                     {
@@ -92,20 +93,69 @@ namespace SurfaceGen
                     }
                 }
 
-                Vector3 sum = Vector3.zero;
-                foreach (var c in room.cells) sum += CellToWorld(c.x, c.y, b);
-                room.center = sum / room.cells.Count;
-                room.area = room.cells.Count * cellSize * cellSize;
+                int bboxCells = (maxX - minX + 1) * (maxZ - minZ + 1);
+                if (bboxCells != room.cells.Count)
+                    Debug.LogWarning($"Room {rooms.Count} isn't a rectangle: " +
+                                     $"{room.cells.Count} cells from {bboxCells} in rectangle");
+
+                float x0 = b.min.x + minX * cellSize;
+                float x1 = b.min.x + (maxX + 1) * cellSize;
+                float z0 = b.min.z + minZ * cellSize;
+                float z1 = b.min.z + (maxZ + 1) * cellSize;
+
+                SnapToWalls(ref x0, ref x1, ref z0, ref z1, walls);
+
+                room.bounds = new Bounds(
+                    new Vector3((x0 + x1) * 0.5f, b.min.y, (z0 + z1) * 0.5f),
+                    new Vector3(x1 - x0, 0f, z1 - z0));
+                room.center = room.bounds.center;
+                room.width = x1 - x0;
+                room.depth = z1 - z0;
+                room.area = room.width * room.depth;
                 rooms.Add(room);
             }
 
             Debug.Log($"Rooms: {rooms.Count}");
         }
 
-        Vector3 CellToWorld(int x, int z, Bounds b) =>
-            new Vector3(b.min.x + (x + 0.5f) * cellSize,
-                b.min.y + checkHeight,
-                b.min.z + (z + 0.5f) * cellSize);
+        void SnapToWalls(ref float x0, ref float x1, ref float z0, ref float z1, List<Renderer> walls)
+        {
+            const float eps = 0.001f;
+            float c = cellSize;
+
+            float left = x0, right = x1, back = z0, front = z1;
+            float bestL = float.NegativeInfinity, bestR = float.PositiveInfinity;
+            float bestB = float.NegativeInfinity, bestF = float.PositiveInfinity;
+
+            foreach (var r in walls)
+            {
+                Bounds wb = r.bounds;
+                bool overlapX = wb.max.x > x0 + eps && wb.min.x < x1 - eps;
+                bool overlapZ = wb.max.z > z0 + eps && wb.min.z < z1 - eps;
+                bool alongZ = wb.size.x < wb.size.z;
+
+                if (alongZ && overlapZ)
+                {
+                    if (wb.max.x >= x0 - c - eps && wb.max.x <= x0 + eps) bestL = Mathf.Max(bestL, wb.max.x);
+                    if (wb.min.x <= x1 + c + eps && wb.min.x >= x1 - eps) bestR = Mathf.Min(bestR, wb.min.x);
+                }
+                else if (!alongZ && overlapX)
+                {
+                    if (wb.max.z >= z0 - c - eps && wb.max.z <= z0 + eps) bestB = Mathf.Max(bestB, wb.max.z);
+                    if (wb.min.z <= z1 + c + eps && wb.min.z >= z1 - eps) bestF = Mathf.Min(bestF, wb.min.z);
+                }
+            }
+
+            if (!float.IsInfinity(bestL)) left = bestL;
+            if (!float.IsInfinity(bestR)) right = bestR;
+            if (!float.IsInfinity(bestB)) back = bestB;
+            if (!float.IsInfinity(bestF)) front = bestF;
+
+            x0 = left;
+            x1 = right;
+            z0 = back;
+            z1 = front;
+        }
 
         void OnDrawGizmos()
         {
@@ -113,11 +163,37 @@ namespace SurfaceGen
             Random.InitState(1);
             foreach (var r in rooms)
             {
-                Gizmos.color = Color.HSVToRGB(Random.value, 0.8f, 1f) * new Color(1, 1, 1, 0.5f);
-                foreach (var c in r.cells)
-                    Gizmos.DrawCube(CellToWorld(c.x, c.y, floor.bounds) - Vector3.up * checkHeight + Vector3.up * 0.05f,
-                        new Vector3(cellSize, 0.02f, cellSize) * 0.95f);
+                Color col = Color.HSVToRGB(Random.value, 0.8f, 1f);
+                Gizmos.color = new Color(col.r, col.g, col.b, 0.5f);
+                Gizmos.DrawCube(r.bounds.center + Vector3.up * 0.05f,
+                    new Vector3(r.width, 0.02f, r.depth));
+                Gizmos.color = col;
+                Gizmos.DrawWireCube(r.bounds.center + Vector3.up * 0.05f,
+                    new Vector3(r.width, 0.02f, r.depth));
             }
+        }
+
+        public RoomParameters[] GetRoomsAsRoomParameters(float h)
+        {
+            RoomParameters[] list = new RoomParameters[rooms.Count];
+
+            int absoluteCounter = 0;
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                RoomParameters r = ScriptableObject.CreateInstance<RoomParameters>();
+                r.id = "room" + i;
+                for (int j = 0; j < 4; j++)
+                {
+                    r.markers[j] = absoluteCounter++;
+                }
+
+                r.size = new Vector3(rooms[i].width, h, rooms[i].depth);
+
+                list[i] = r;
+            }
+
+            return list;
         }
     }
 }

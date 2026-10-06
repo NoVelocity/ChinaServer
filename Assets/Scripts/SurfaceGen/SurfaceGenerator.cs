@@ -8,7 +8,7 @@ namespace SurfaceGen
         public Color outerWallsColor;
         public Color innerWallsColor;
 
-        [Header("Parameters")] public SurfaceParameters parameters;
+        [Header("Parameters")] public SurfaceParameters localParameters;
         public GameObject wallPrefab;
 
         private RoomFinder finder;
@@ -17,12 +17,14 @@ namespace SurfaceGen
         {
             finder = GetComponent<RoomFinder>();
 
-            GenerateSurface(parameters);
+            GenerateSurface();
 
             finder.FindRooms();
+            localParameters.roomParameters = finder.GetRoomsAsRoomParameters(localParameters.scale.y);
+            print(new CamerasConfiguration(localParameters.roomParameters, localParameters.robotParameters).ToString());
         }
 
-        void GenerateSurface(SurfaceParameters localParameters)
+        void GenerateSurface()
         {
             GameObject surface = GameObject.CreatePrimitive(PrimitiveType.Plane);
             surface.transform.parent = transform;
