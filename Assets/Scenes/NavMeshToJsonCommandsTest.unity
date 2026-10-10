@@ -1372,7 +1372,7 @@ MonoBehaviour:
   OnMessageReceived:
     m_PersistentCalls:
       m_Calls: []
-  _url: wss://echo.websocket.org
+  _url: ws://127.0.0.1:8765/unity
   _connectOnStart: 1
 --- !u!1001 &754358866
 PrefabInstance:
@@ -1552,20 +1552,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b4c0d2e54011beb97a3b44a230d4b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NoVelocity.Communicator.CommunicatorBehaviour
-  host: 127.0.0.1
-  port: 8765
-  useTls: 0
-  clientId: unity
-  connectOnStart: 1
-  autoReconnect: 1
-  reconnectInitialDelay: 1
-  reconnectMaxDelay: 15
-  onConnected:
-    m_PersistentCalls:
-      m_Calls: []
-  onDisconnected:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &1051525311
 MonoBehaviour:
   m_ObjectHideFlags: 0

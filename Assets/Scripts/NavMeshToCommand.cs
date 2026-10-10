@@ -20,7 +20,7 @@ public class NavMeshToCommand : MonoBehaviour
     float lastChangeTime = -999f;
     float lastSendTime = -999f;
     float minCommandInterval = 0.15f;
-    float resendCommandInterval = 1f;
+    float resendCommandInterval = 0f;
 
     void Awake()
     {
@@ -92,7 +92,7 @@ public class NavMeshToCommand : MonoBehaviour
     {
         string json = obj.ToString(Formatting.None);
 
-        _client.SendMessage(JsonConvert.ToString("robot"), json);
+        if (_client != null) { _client.SendMessage("robot", json); }
         lastSendTime = Time.time;
     }
 

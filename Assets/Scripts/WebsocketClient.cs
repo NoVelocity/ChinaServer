@@ -6,13 +6,18 @@ using UnityEngine.Events;
 
 public class WebSocketMessageEventArgs : EventArgs
 {
+    public string id { get; private set; }
     public string source { get; private set; }
     public string payload { get; private set; }
 
-    public WebSocketMessageEventArgs(string source, string payload)
+    // Listeners can set this to reject the message. Leave null to reply "ok".
+    public string errorCode { get; set; }
+
+    public WebSocketMessageEventArgs(string source, string payload, string id = null)
     {
         this.source = source;
         this.payload = payload;
+        this.id = id;
     }
 }
 
@@ -28,7 +33,7 @@ public class WebsocketClient : MonoBehaviour
 
     private WebSocket _websocket;
 
-    [SerializeField] string _url = "wss://echo.websocket.org";
+    [SerializeField] string _url = "ws://127.0.0.1:8765/unity";
     [SerializeField] bool _connectOnStart = true; //попытаться подключиться при старте проекта, на случай если по названию не понятно
 
     private void Awake()
@@ -63,27 +68,56 @@ public class WebsocketClient : MonoBehaviour
 
         _websocket.OnMessage += (bytes) =>
         {
+            string taskId = null;
             try
             {
                 string rawMessage = System.Text.Encoding.UTF8.GetString(bytes);
+
                 JObject inboundJson = JObject.Parse(rawMessage);
 
-                string sourceStr = inboundJson["source"]?.ToString() ?? "Unknown-source";
-                string payloadStr = inboundJson["payload"]?.ToString(Newtonsoft.Json.Formatting.None) ?? "Cant-parse-payload";
+                taskId = inboundJson["id"]?.ToString();
+                print(taskId);
+                print(inboundJson["source"]);
 
-                print(sourceStr);
-                print(payloadStr);
-
-                OnMessageReceived.Invoke(new WebSocketMessageEventArgs(sourceStr, payloadStr));
-
-                if (sourceStr != "Unknown-source")
+                if (inboundJson["result"] != null && inboundJson["source"] == null)
                 {
-                    SendMessage(sourceStr, "\"ok\"");
+                    string result = inboundJson["result"].ToString();
+
+                    print($"Result for task {taskId}: {result}");
+
+                    return;
                 }
+
+                // Incoming task: needs both id and source
+                if (taskId == null || inboundJson["source"] == null)
+                {
+                    Debug.LogWarning($"Ignoring unexpected frame: {rawMessage}");
+
+                    return;
+                }
+
+                string sourceStr = inboundJson["source"].ToString();
+
+                if (inboundJson["payload"] == null)
+                {
+                    SendResult(taskId, "BAD_PAYLOAD");
+
+                    return;
+                }
+
+                string payloadStr = inboundJson["payload"].ToString(Newtonsoft.Json.Formatting.None);
+                print($"{sourceStr}: {payloadStr}");
+
+                var args = new WebSocketMessageEventArgs(sourceStr, payloadStr, taskId);
+                OnMessageReceived.Invoke(args);
+
+                SendResult(taskId, args.errorCode ?? "ok");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error processing message: {ex.Message}");
+                //Debug.LogError($"Error processing message: {ex.Message}");
+
+                if (taskId != null) SendResult(taskId, "ERR_PROCESSING");
             }
         };
 
@@ -107,14 +141,29 @@ public class WebsocketClient : MonoBehaviour
             }
 
             string messageToSend = outboundJson.ToString(Newtonsoft.Json.Formatting.None);
+            print(messageToSend);
 
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(messageToSend);
-            await _websocket.Send(bytes);
+            await _websocket.SendText(messageToSend);
         }
         else
         {
             Debug.LogError("WebSocket error: \nwebsocket isn't open or doesn't exist");
         }
+    }
+
+    private async void SendResult(string taskId, string result)
+    {
+        if (_websocket == null || _websocket.State != WebSocketState.Open)
+        {
+            Debug.LogError("WebSocket error: \nwebsocket isn't open, can't send result");
+            return;
+        }
+
+        JObject reply = new JObject();
+        reply["id"] = taskId;
+        reply["result"] = result;
+
+        await _websocket.SendText(reply.ToString(Newtonsoft.Json.Formatting.None));
     }
 
     private void Update()
